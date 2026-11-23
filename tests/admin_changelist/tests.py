@@ -156,6 +156,21 @@ class ChangeListTests(TestCase):
         cl = m.get_changelist_instance(request)
         self.assertEqual(cl.get_ordering_field_columns(), {3: "asc", 2: "asc"})
 
+    def test_list_display_deferred_foreign_key(self):
+        class DeferredChildAdmin(admin.ModelAdmin):
+            list_display = ["name", "parent"]
+
+            def get_queryset(self, request):
+                return super().get_queryset(request).only("name")
+
+        parent = Parent.objects.create(name="Mary")
+        Child.objects.create(name="Danielle", parent=parent)
+        model_admin = DeferredChildAdmin(Child, custom_site)
+        request = self._mocked_authenticated_request("/child/", self.superuser)
+        response = model_admin.changelist_view(request)
+        self.assertContains(response, "Danielle")
+        self.assertContains(response, str(parent))
+
     def test_select_related_preserved(self):
         """
         Regression test for #10348: ChangeList.get_queryset() shouldn't
