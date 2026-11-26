@@ -44,3 +44,7 @@ Bugfixes
 * Fixed a regression in Django 6.1 where model formsets raised a
   :exc:`TypeError` for sliced querysets whose ordering could contain ties
   (:ticket:`37531`).
+
+* Fixed a regression in Django 6.1 where model formsets could reapply a
+  model's default ordering to unordered querysets. For grouped querysets, this
+  could change aggregate values or produce duplicate forms.
