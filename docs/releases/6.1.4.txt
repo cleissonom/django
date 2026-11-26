@@ -45,7 +45,7 @@ Bugfixes
   :exc:`TypeError` for sliced querysets whose ordering could contain ties
   (:ticket:`37531`).
 
-* Fixed a regression in Django 6.1 where :func:`~django.core.mail.get_connection`
-  omitted ``fail_silently=False`` when creating a backend from the deprecated
-  :setting:`EMAIL_BACKEND` setting. This could cause custom backends to suppress
-  delivery errors.
+* Fixed a regression in Django 6.1 where
+  :func:`~django.core.mail.get_connection` omitted ``fail_silently=False`` when
+  creating a backend from the deprecated :setting:`EMAIL_BACKEND` setting.
+  This could cause custom backends to suppress delivery errors.
