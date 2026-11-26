@@ -22,6 +22,7 @@ from django.test import TestCase, skipUnlessDBFeature
 from .models import (
     AlternateBook,
     Author,
+    AuthorByBookTitle,
     AuthorMeeting,
     BetterAuthor,
     Book,
@@ -1855,6 +1856,27 @@ class ModelFormsetTest(TestCase):
         # Must be exactly ("pk",), not ("pk", "pk").
         self.assertEqual(queryset.query.order_by, ("pk",))
         self.assertIs(queryset.totally_ordered, True)
+
+    def test_queryset_with_cleared_ordering_uses_pk(self):
+        walt = Author.objects.create(name="Walt")
+        charles = Author.objects.create(name="Charles")
+        AuthorFormSet = modelformset_factory(Author, fields=["name"], extra=0)
+        formset = AuthorFormSet(queryset=Author.objects.order_by())
+        self.assertEqual([form.instance for form in formset.forms], [walt, charles])
+
+    def test_grouped_queryset_ignores_meta_ordering(self):
+        author = AuthorByBookTitle.objects.create(name="Walt")
+        Book.objects.create(author=author, title="First")
+        Book.objects.create(author=author, title="Second")
+        AuthorFormSet = modelformset_factory(
+            AuthorByBookTitle, fields=["name"], extra=0
+        )
+        queryset = AuthorByBookTitle.objects.annotate(book_count=models.Count("book"))
+        formset = AuthorFormSet(queryset=queryset)
+        self.assertEqual(
+            [(form.instance.pk, form.instance.book_count) for form in formset.forms],
+            [(author.pk, 2)],
+        )
 
     def test_ordered_sliced_queryset(self):
         for name in ["Walt", "Charles", "Arthur", "Paul"]:

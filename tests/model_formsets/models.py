@@ -18,6 +18,12 @@ class BetterAuthor(Author):
     write_speed = models.IntegerField()
 
 
+class AuthorByBookTitle(Author):
+    class Meta:
+        proxy = True
+        ordering = ["book__title"]
+
+
 class Book(models.Model):
     author = models.ForeignKey(Author, models.CASCADE)
     title = models.CharField(max_length=100)

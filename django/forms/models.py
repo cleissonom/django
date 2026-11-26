@@ -780,12 +780,13 @@ class BaseModelFormSet(BaseFormSet, AltersData):
             else:
                 qs = self.model._default_manager.get_queryset()
 
-            # If the queryset isn't already ordered and isn't sliced, we need
-            # to add an artificial ordering here to make sure that all formsets
-            # constructed from this queryset have the same form order.
-            if not qs.query.is_sliced and not qs.totally_ordered:
-                current_ordering = qs.query.order_by or qs.model._meta.ordering or []
-                qs = qs.order_by(*current_ordering, "pk")
+            # Use the primary key to make form order deterministic.
+            query = qs.query
+            if not query.is_sliced and not qs.totally_ordered:
+                ordering = query.order_by
+                if not ordering and query.default_ordering and not query.group_by:
+                    ordering = qs.model._meta.ordering or ()
+                qs = qs.order_by(*ordering, "pk")
 
             # Removed queryset limiting here. As per discussion re: #13023
             # on django-dev, max_num should not prevent existing
