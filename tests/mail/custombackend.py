@@ -69,3 +69,14 @@ class FailingEmailBackend(OptionsCapturingBackend):
         if self.fail_silently:
             return 0
         raise ValueError("FailingEmailBackend is doomed to fail.")
+
+
+class QuietFailingEmailBackend(BaseEmailBackend):
+    def __init__(self, *, fail_silently=True, **kwargs):
+        super().__init__(**kwargs)
+        self.fail_silently = fail_silently
+
+    def send_messages(self, email_messages):
+        if self.fail_silently:
+            return 0
+        raise OSError("Delivery failed")
