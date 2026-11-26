@@ -17,6 +17,7 @@ from django.core.mail import (
     EmailMultiAlternatives,
     get_connection,
     mailers,
+    send_mail,
 )
 from django.core.mail.deprecation import NO_DEFAULT_MAILER_WARNING
 from django.core.mail.message import forbid_multi_line_headers, sanitize_address
@@ -133,6 +134,19 @@ class UndocumentedFeatureErrorTests(SimpleTestCase):
 
 @ignore_warnings(category=RemovedInDjango2028Warning)
 class DeprecatedCompatibilityTests(SimpleTestCase):
+    @override_deprecated_email_settings(
+        EMAIL_BACKEND="mail.custombackend.QuietFailingEmailBackend"
+    )
+    def test_send_mail_propagates_backend_errors(self):
+        args = ("Subject", "Body", "from@example.com", ["to@example.com"])
+        self.assertEqual(send_mail(*args, fail_silently=True), 0)
+        for kwargs in ({}, {"fail_silently": False}):
+            with (
+                self.subTest(kwargs=kwargs),
+                self.assertRaisesMessage(OSError, "Delivery failed"),
+            ):
+                send_mail(*args, **kwargs)
+
     def test_bad_header_error(self):
         """
         Existing code that catches deprecated BadHeaderError should be

@@ -86,19 +86,18 @@ def get_connection(backend=None, *, fail_silently=False, **kwds):
     warn_about_external_use(msg, RemovedInDjango2028Warning, skip_frames=1)
     warn_about_default_mailers_if_needed()
 
-    if fail_silently:
-        kwds["fail_silently"] = fail_silently
-
     if mailers._is_configured:
         # Support get_connection(**kwargs) from MAILERS["default"].
         if backend is not None:
             raise RuntimeError(
                 "get_connection(backend, ...) is not supported with MAILERS."
             )
+        if fail_silently:
+            kwds["fail_silently"] = fail_silently
         return mailers.create_connection(DEFAULT_MAILER_ALIAS, _deprecated_kwargs=kwds)
 
     klass = import_string(backend or settings.EMAIL_BACKEND)
-    return klass(**kwds)
+    return klass(fail_silently=fail_silently, **kwds)
 
 
 @deprecate_posargs(
